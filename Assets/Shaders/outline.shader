@@ -70,14 +70,11 @@ Shader "Hidden/outline"
             fixed4 frag(v2f i) : SV_Target
             {
                 float4 col = tex2D(_MainTex, i.uv);
-                //float4 col = float4(0, 0, 0, 1);
 
-                //float depth = UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, i.uv));
                 float3 normal = float3(1, 1, 1);
                 float depth = 0;
                 DecodeDepthNormal(tex2D(_CameraDepthNormalsTexture, i.uv), depth, normal);
 
-                //col = float4(depth, depth, depth, 1);
                 for (uint g = 0; g < _OutlineThickness; g++)
                 {
                     for (uint j = 0; j < 4; j++)
@@ -86,8 +83,6 @@ Shader "Hidden/outline"
                         float3 nbNormal = float3(1, 1, 1);
                         float nbDepth = 1;
                         DecodeDepthNormal(tex2D(_CameraDepthNormalsTexture, NbPos), nbDepth, nbNormal);
-                        //float Nbdepth = UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, NbPos));
-                        //nbDepth = Linear01Depth(nbDepth);
                         if (abs(nbDepth - depth) > _DepthTreshold)
                         {
                             col = float4(1, 1, 1, 1);
