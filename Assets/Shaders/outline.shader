@@ -1,8 +1,10 @@
-Shader "Hidden/NewImageEffectShader"
+Shader "Hidden/outline"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
+        _MainTex ("_MainTex", 2D) = "white" {}
+        _DepthTreshold ("_DepthTreshold", float) = 0
+        _OutlineThickness ("_OutlineThickness", float) = 0
     }
     SubShader
     {
@@ -38,12 +40,61 @@ Shader "Hidden/NewImageEffectShader"
             }
 
             sampler2D _MainTex;
+            float4 _MainTex_TexelSize;
+            sampler2D _CameraDepthTexture;
 
-            fixed4 frag (v2f i) : SV_Target
+            float _DepthTreshold;
+            float _OutlineThickness;
+
+            float2 GetPosShift(uint id)
             {
-                fixed4 col = tex2D(_MainTex, i.uv);
-                // just invert the colors
-                col.rgb = 1 - col.rgb;
+                if (id == 0)
+                {
+                    return float2(-1, 0);
+                }
+                else if (id == 1)
+                {
+                    return float2(1, 0);
+                }
+                else if (id == 2)
+                {
+                    return float2(0, -1);
+                }
+                else if (id == 3)
+                {
+                    return float2(0, 1);
+                }
+                return float2(0, 0);
+            }
+
+            fixed4 frag(v2f i) : SV_Target
+            {
+                float4 col = tex2D(_MainTex, i.uv);
+                //float4 col = float4(0, 0, 0, 1);
+
+                float depth = UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, i.uv));
+                depth = Linear01Depth(depth);
+
+                //col = float4(depth, depth, depth, 1);
+                for (uint g = 0; g < _OutlineThickness; g++)
+                {
+                    for (uint j = 0; j < 4; j++)
+                    {
+                        float2 NbPos = i.uv + _MainTex_TexelSize.xy * GetPosShift(j) * g;
+                        float Nbdepth = UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, NbPos));
+                        Nbdepth = Linear01Depth(Nbdepth);
+                        if (abs(Nbdepth - depth) > _DepthTreshold)
+                        {
+                            col = float4(1, 1, 1, 1);
+                            break;
+                        }
+                        else
+                        {
+                            col = float4(0, 0, 0, 1);
+                        }
+                    }
+                }
+
                 return col;
             }
             ENDCG
