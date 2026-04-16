@@ -4,6 +4,7 @@ Shader "Hidden/outline"
     {
         _MainTex ("_MainTex", 2D) = "white" {}
         _DepthTreshold ("_DepthTreshold", float) = 0
+        _NormalTreshold("_NormalTreshold", float) = 0
         _OutlineThickness ("_OutlineThickness", float) = 0
     }
     SubShader
@@ -44,6 +45,7 @@ Shader "Hidden/outline"
             sampler2D _CameraDepthNormalsTexture;
 
             float _DepthTreshold;
+            float _NormalTreshold;
             float _OutlineThickness;
 
             float2 GetPosShift(uint id)
@@ -75,6 +77,8 @@ Shader "Hidden/outline"
                 float depth = 0;
                 DecodeDepthNormal(tex2D(_CameraDepthNormalsTexture, i.uv), depth, normal);
 
+                col = float4(0, 0, 0, 1);
+
                 for (uint g = 0; g < _OutlineThickness; g++)
                 {
                     for (uint j = 0; j < 4; j++)
@@ -83,18 +87,23 @@ Shader "Hidden/outline"
                         float3 nbNormal = float3(1, 1, 1);
                         float nbDepth = 1;
                         DecodeDepthNormal(tex2D(_CameraDepthNormalsTexture, NbPos), nbDepth, nbNormal);
+                        //depth
                         if (abs(nbDepth - depth) > _DepthTreshold)
                         {
                             col = float4(1, 1, 1, 1);
                             break;
                         }
-                        else
+
+                        //normal
+                        if (dot(nbNormal, normal) < _NormalTreshold)
                         {
-                            col = float4(0, 0, 0, 1);
+                            col = float4(1, 0, 1, 1);
+                            break;
                         }
                     }
                 }
 
+                //return float4(normal.x, normal.y, normal.z, 1) * 3;
                 return col;
             }
             ENDCG
