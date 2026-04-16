@@ -10,7 +10,7 @@ public class ImageEffectGate : MonoBehaviour
 
 	private void Start()
 	{
-		Camera.main.depthTextureMode = DepthTextureMode.Depth;
+		Camera.main.depthTextureMode = DepthTextureMode.DepthNormals;
 	}
 	void OnRenderImage(RenderTexture ScreenImage, RenderTexture Destination)
     {

@@ -41,7 +41,7 @@ Shader "Hidden/outline"
 
             sampler2D _MainTex;
             float4 _MainTex_TexelSize;
-            sampler2D _CameraDepthTexture;
+            sampler2D _CameraDepthNormalsTexture;
 
             float _DepthTreshold;
             float _OutlineThickness;
@@ -72,8 +72,10 @@ Shader "Hidden/outline"
                 float4 col = tex2D(_MainTex, i.uv);
                 //float4 col = float4(0, 0, 0, 1);
 
-                float depth = UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, i.uv));
-                depth = Linear01Depth(depth);
+                //float depth = UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, i.uv));
+                float3 normal = float3(1, 1, 1);
+                float depth = 0;
+                DecodeDepthNormal(tex2D(_CameraDepthNormalsTexture, i.uv), depth, normal);
 
                 //col = float4(depth, depth, depth, 1);
                 for (uint g = 0; g < _OutlineThickness; g++)
@@ -81,9 +83,12 @@ Shader "Hidden/outline"
                     for (uint j = 0; j < 4; j++)
                     {
                         float2 NbPos = i.uv + _MainTex_TexelSize.xy * GetPosShift(j) * g;
-                        float Nbdepth = UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, NbPos));
-                        Nbdepth = Linear01Depth(Nbdepth);
-                        if (abs(Nbdepth - depth) > _DepthTreshold)
+                        float3 nbNormal = float3(1, 1, 1);
+                        float nbDepth = 1;
+                        DecodeDepthNormal(tex2D(_CameraDepthNormalsTexture, NbPos), nbDepth, nbNormal);
+                        //float Nbdepth = UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, NbPos));
+                        //nbDepth = Linear01Depth(nbDepth);
+                        if (abs(nbDepth - depth) > _DepthTreshold)
                         {
                             col = float4(1, 1, 1, 1);
                             break;
