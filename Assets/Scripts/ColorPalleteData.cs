@@ -23,6 +23,6 @@ public class ColorPalleteData : MonoBehaviour
     void Update()
     {
         material.SetColorArray(colorsPropertyID, colors);
-        material.SetInteger(colorsSizePropertyID, colors.Length);
+        material.SetFloat(colorsSizePropertyID, colors.Length);
     }
 }

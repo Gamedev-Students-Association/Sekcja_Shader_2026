@@ -39,13 +39,29 @@ Shader "Hidden/ColorPallete"
 
             sampler2D _MainTex;
             float4 _ColorSet[64];
-            uint _ColorSetSize;
+            float _ColorSetSize;
 
-            fixed4 frag (v2f i) : SV_Target
+            float4 frag (v2f i) : SV_Target
             {
-                fixed4 col = tex2D(_MainTex, i.uv);
+                float4 col = tex2D(_MainTex, i.uv);
 
-                col = _ColorSet[0];
+                //return float4(_ColorSetSize, _ColorSetSize, _ColorSetSize, 1);
+
+                //col = _ColorSet[0];
+                float minPalleteDist = length(float3(1, 1, 1)) + 1;
+                uint closestColID = 0;
+                [loop]
+                for (int j = 0; j <= _ColorSetSize; j++)
+                {
+                    float curPalleteDist = length(col - _ColorSet[j]);
+                    if (curPalleteDist < minPalleteDist)
+                    {
+                        minPalleteDist = curPalleteDist;
+                        closestColID = j;
+                    }
+                }
+
+                col = _ColorSet[closestColID];
 
                 return col;
             }
