@@ -1,12 +1,15 @@
-Shader "Unlit/hsvTest"
+Shader "Unlit/SimpleGradient"
 {
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
+        _FirstCol ("_FirstCol", Color) = (0, 0, 0, 1)
+        _SecondCol("_SecondCol", Color) = (1, 1, 1, 1)
+        _UseHSV ("_UseHSV", float) = 0
     }
-        SubShader
+    SubShader
     {
-        Tags { "RenderType" = "Opaque" }
+        Tags { "RenderType"="Opaque" }
         LOD 100
 
         Pass
@@ -18,7 +21,9 @@ Shader "Unlit/hsvTest"
             #pragma multi_compile_fog
 
             #include "UnityCG.cginc"
+            #ifndef COLOR_CONVERSION_LIB
             #include "ColorConversion.cginc"
+            #endif
 
             struct appdata
             {
@@ -36,6 +41,10 @@ Shader "Unlit/hsvTest"
             sampler2D _MainTex;
             float4 _MainTex_ST;
 
+            float4 _FirstCol;
+            float4 _SecondCol;
+            float _UseHSV;
+
             v2f vert (appdata v)
             {
                 v2f o;
@@ -45,28 +54,20 @@ Shader "Unlit/hsvTest"
                 return o;
             }
 
-
-            
-
             fixed4 frag (v2f i) : SV_Target
             {
                 // sample the texture
                 fixed4 col = tex2D(_MainTex, i.uv);
 
-            //col = float4(i.uv.x, i.uv.y, 0, 1);
+                float gradient = i.uv.y;
 
-                float3 hsv = RGBtoHSV(col.xyz);
-                hsv.y = 2.0;
-                hsv.z = 0.5;
-                //float saturation = hsv.y;
-                //hsv.y = 0;
-                //hsv.x = abs(hsv.x + _Time.x) % 1;
-            //float3 hsv = float3(abs(i.uv.x - _Time.y) % 1, 1, 1);
-                
+                col = lerp(_FirstCol, _SecondCol, gradient);
 
-                col = float4(HSVtoRGB(hsv), col.a);
+                if (_UseHSV > 0)
+                {
+                    col = float4(HSVtoRGB(float3(i.uv.x, 1, i.uv.y)), 1);
+                }
 
-                
                 return col;
             }
             ENDCG
