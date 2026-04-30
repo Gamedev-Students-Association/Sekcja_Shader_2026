@@ -4,6 +4,7 @@ Shader "Unlit/PlaneClouds"
     {
         _MainTex ("Texture", 2D) = "white" {}
         _NoiseScale ("CloudsScale", vector) = (1, 1, 1, 0)
+        _NoiseShiftScale ("WindScale", vector) = (1, 1, 1, 0)
         _CloudCol ("CloudsColor", Color) = (1, 1, 1, 1)
     }
     SubShader
@@ -34,18 +35,22 @@ Shader "Unlit/PlaneClouds"
             {
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
+                float4 worldPos : TEXCOORD1;
             };
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
 
             vector _NoiseScale;
+            vector _NoiseShiftScale;
             float4 _CloudCol;
 
             v2f vert (appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
+                o.worldPos = mul(unity_ObjectToWorld, v.vertex);
+
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 return o;
             }
@@ -56,10 +61,11 @@ Shader "Unlit/PlaneClouds"
                 float4 col = tex2D(_MainTex, i.uv);
                 col = _CloudCol;
 
+                float baseNoise = RemapNoise(CloudNoise2D(float3(i.worldPos.x, i.worldPos.y, 0.0) * _NoiseShiftScale.xyz + float3(_Time.y, _Time.y, 0.0)));
+                float finalNoise = RemapNoise(GradientNoise((float3(i.worldPos.x, i.worldPos.y, 0.0)) *_NoiseScale.xyz + float3(baseNoise, baseNoise, 0.0) + float3(_Time.y, _Time.y, 0.0)));
 
-                float baseNoise = RemapNoise(GradientNoise(float3(i.uv.x, i.uv.y, 0.0) * _NoiseScale.xyz));
 
-                col.a = baseNoise;
+                col.a = smoothstep(0, 1, pow(finalNoise, 2)); //pow(finalNoise, 4);
 
                 //col = float4(baseNoise, baseNoise, baseNoise, 1.0);
 
