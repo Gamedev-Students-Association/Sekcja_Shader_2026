@@ -61,11 +61,12 @@ Shader "Unlit/PlaneClouds"
                 float4 col = tex2D(_MainTex, i.uv);
                 col = _CloudCol;
 
-                float baseNoise = RemapNoise(CloudNoise2D(float3(i.worldPos.x, i.worldPos.y, 0.0) * _NoiseShiftScale.xyz + float3(_Time.y, _Time.y, 0.0)));
+                float baseNoise = RemapNoise(GradientNoise(float3(i.worldPos.x, i.worldPos.y, 0.0) * _NoiseShiftScale.xyz + float3(0.0, 0.0, 0.0)));
                 float finalNoise = RemapNoise(GradientNoise((float3(i.worldPos.x, i.worldPos.y, 0.0)) *_NoiseScale.xyz + float3(baseNoise, baseNoise, 0.0) + float3(_Time.y, _Time.y, 0.0)));
 
 
-                col.a = smoothstep(0, 1, pow(finalNoise, 2)); //pow(finalNoise, 4);
+                //col.a = smoothstep(0, 1, pow(finalNoise, 2)); //pow(finalNoise, 4);
+                col.a = 1 - pow((1 - pow(finalNoise, 4)), 12);
 
                 //col = float4(baseNoise, baseNoise, baseNoise, 1.0);
 
